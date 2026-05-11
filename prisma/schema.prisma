@@ -1,0 +1,209 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OrgRole {
+  owner
+  admin
+  contributor
+  viewer
+}
+
+enum CloudProvider {
+  azure
+  aws
+  microsoft365
+}
+
+enum ScanMode {
+  demo
+  real
+}
+
+enum ScanStatus {
+  queued
+  running
+  completed
+  failed
+}
+
+enum FindingSeverity {
+  low
+  medium
+  high
+  critical
+}
+
+enum FindingStatus {
+  pass
+  fail
+  warning
+  not_applicable
+  error
+}
+
+enum ControlStatus {
+  not_started
+  partial
+  implemented
+  verified
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  members   Member[]
+  auditLogs AuditLog[]
+}
+
+model Organisation {
+  id                String            @id @default(cuid())
+  name              String
+  industry          String
+  employeeCount     Int
+  cloudProviders    CloudProvider[]
+  usesMicrosoft365  Boolean           @default(false)
+  handlesSensitive  Boolean           @default(false)
+  hasRemoteWorkers  Boolean           @default(false)
+  hasContractors    Boolean           @default(false)
+  backupApproach    String
+  mfaApproach       String
+  deviceManagement  String
+  incidentMaturity  String
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  members           Member[]
+  assessments       Assessment[]
+  connections       CloudConnection[]
+  scanRuns          ScanRun[]
+  findings          Finding[]
+  policies          Policy[]
+  auditLogs         AuditLog[]
+}
+
+model Member {
+  id             String       @id @default(cuid())
+  userId         String
+  organisationId String
+  role           OrgRole
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organisation   Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organisationId])
+}
+
+model Assessment {
+  id             String       @id @default(cuid())
+  organisationId String
+  completedAt    DateTime?
+  score          Int          @default(0)
+  answers        AssessmentAnswer[]
+  organisation   Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model AssessmentAnswer {
+  id           String     @id @default(cuid())
+  assessmentId String
+  questionId   String
+  category     String
+  value        Json
+  riskImpact   Int
+  controlTags  String[]
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+}
+
+model CloudConnection {
+  id               String       @id @default(cuid())
+  organisationId   String
+  provider         CloudProvider
+  name             String
+  tenantId         String?
+  clientId         String?
+  subscriptionId   String?
+  encryptedSecret  String?
+  secretPreview    String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  organisation     Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  scanRuns         ScanRun[]
+}
+
+model ScanRun {
+  id             String          @id @default(cuid())
+  organisationId String
+  connectionId   String?
+  provider       CloudProvider
+  mode           ScanMode
+  status         ScanStatus
+  startedAt      DateTime?
+  completedAt    DateTime?
+  errorMessage   String?
+  organisation   Organisation    @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  connection     CloudConnection? @relation(fields: [connectionId], references: [id])
+  findings       Finding[]
+  createdAt      DateTime        @default(now())
+}
+
+model Finding {
+  id               String          @id @default(cuid())
+  organisationId   String
+  scanRunId        String?
+  provider         CloudProvider
+  category         String
+  checkId          String
+  title            String
+  description      String
+  severity         FindingSeverity
+  status           FindingStatus
+  evidence         Json
+  affectedResource String?
+  remediation      String
+  complianceTags   String[]
+  createdAt        DateTime        @default(now())
+  organisation     Organisation    @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  scanRun          ScanRun?        @relation(fields: [scanRunId], references: [id], onDelete: SetNull)
+}
+
+model Policy {
+  id             String          @id @default(cuid())
+  organisationId String
+  type           String
+  title          String
+  content        String
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  organisation   Organisation    @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  versions       PolicyVersion[]
+}
+
+model PolicyVersion {
+  id        String   @id @default(cuid())
+  policyId  String
+  version   Int
+  content   String
+  createdAt DateTime @default(now())
+  policy    Policy   @relation(fields: [policyId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id             String       @id @default(cuid())
+  organisationId String
+  actorUserId    String?
+  action         String
+  targetType     String
+  targetId       String?
+  metadata       Json?
+  createdAt      DateTime     @default(now())
+  organisation   Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  actor          User?        @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+}

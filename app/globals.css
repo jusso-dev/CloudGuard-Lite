@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0.982 0.006 225;
+  --foreground: 0.238 0.027 232;
+  --card: 0.996 0.004 225;
+  --card-foreground: 0.238 0.027 232;
+  --muted: 0.946 0.009 225;
+  --muted-foreground: 0.486 0.024 232;
+  --primary: 0.532 0.145 190;
+  --primary-foreground: 0.985 0.006 190;
+  --border: 0.888 0.011 225;
+  --input: 0.888 0.011 225;
+  --ring: 0.62 0.13 190;
+  --destructive: 0.58 0.19 25;
+  --destructive-foreground: 0.986 0.006 25;
+  --success: 0.56 0.13 145;
+  --success-foreground: 0.986 0.006 145;
+  --warning: 0.72 0.14 82;
+  --warning-foreground: 0.24 0.03 82;
+}
+
+* {
+  border-color: oklch(var(--border));
+}
+
+body {
+  background: oklch(var(--background));
+  color: oklch(var(--foreground));
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  letter-spacing: 0;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  background: oklch(var(--primary) / 0.18);
+}
+
+.table-scroll {
+  scrollbar-width: thin;
+}
