@@ -27,7 +27,7 @@
     "@azure/arm-network": "^36.0.0",
     "@azure/arm-resources": "^6.1.0",
     "@azure/arm-storage": "^19.1.0",
-    "@azure/identity": "^4.5.0",
+    "@azure/identity": "^4.14.1",
     "@bull-board/api": "^6.5.3",
     "@bull-board/express": "^6.5.3",
     "@hookform/resolvers": "^3.9.1",
